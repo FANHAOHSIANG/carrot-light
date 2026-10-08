@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Custom Software URL entry point. Run by the comma installer after uninstall.
+# SSH-only helper; C4 Custom Software requires the ELF file, not this script.
 set -euo pipefail
 export GIT_TERMINAL_PROMPT=0
 if [ ! -f /AGNOS ]; then

@@ -1,0 +1,2 @@
+6fccbf22d01ea45545e5a50794ef536d4a80b066b88fa9a4b0fe9a5c685968b5  comma-template
+8dd616c5dfefbe4b5c9eacb4f5215d11b920c99e03ad53e37a587bcef49c0917  carrot-light.bin

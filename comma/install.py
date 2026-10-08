@@ -33,4 +33,4 @@ else:
     shutil.copy2(manager, backup)
   shutil.copy2(Path(__file__).parent/'ambientd.py', dest)
   manager.write_text(updated)
-  print('Installed. Configure /data/ambient_light/config.json BEFORE restarting offroad.')
+  print('Installed. Missing config uses local broadcast; optional config is /data/ambient_light/config.json.')

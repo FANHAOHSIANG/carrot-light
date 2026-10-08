@@ -1,8 +1,5 @@
 name: Build installable Carrot Light
 on:
-  push:
-    branches: [main]
-    paths: ['comma/**', 'esp32/**', 'tests/**', '.github/workflows/build-carrot-light.yml', 'README.md', 'installer.sh']
   workflow_dispatch:
 permissions:
   contents: write

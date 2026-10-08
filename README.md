@@ -7,10 +7,10 @@
 必須先確認 Actions 的 Build installable Carrot Light 成功，而且 carrot-wip 分支存在。透過 C4「自訂軟體」輸入：
 
 ```
-https://raw.githubusercontent.com/FANHAOHSIANG/carrot-light/main/installer.sh
+https://raw.githubusercontent.com/FANHAOHSIANG/carrot-light/main/installers/carrot-light.bin
 ```
 
-此為提供給 comma 自訂軟體安裝器的 shell 腳本；不是瀏覽器網頁，也不是 ESP32 韌體。已裝有 Carrotpilot 的 C4 需走裝置正常卸載／重新安裝流程才能使用；此腳本不會刪除既有 /data/openpilot。安裝程序與原生 build 尚待 C4 實機驗證，請勿行駛中操作。
+此為 AArch64 ELF 安裝器，符合目前 C4 安裝畫面的格式檢查；它使用 comma 安裝器模板，僅將保留的儲存庫 URL 與分支欄位改為 FANHAOHSIANG/carrot-light 與 carrot-wip。已裝有 Carrotpilot 的 C4 需走裝置正常卸載／重新安裝流程才能使用，正常安裝器會替換 /data/openpilot。尚未實機驗證下載與安裝、原生 build，請勿行駛中操作。main/installer.sh 僅為 SSH 工具，不能填入 C4 自訂軟體 URL。
 
 ## C4 端行為
 
@@ -43,3 +43,7 @@ python3 comma/bench_send.py --ip ESP32的IP
 工作流程是一次性建立 carrot-wip；若該分支已存在會停止，避免覆蓋你後來的修改。未設定排程或自動同步官方。要更新基底，需建立新版本並重新驗證。
 
 官方完整來源的授權資訊與 LICENSE 保留於 carrot-wip；本工具僅擴充燈光顯示。
+
+## 安裝器來源與重製
+
+模板來源：https://openpilot.comma.ai，使用 AGNOSSetup-16.4 User-Agent 及 mici 裝置標頭下載。tools/prepare_installer.py 檢查 ELF/架構、唯一 URL/分支欄位與空白保留區，再進行等長欄位替換；其餘位元組不變。installers/SHA256.txt 保存模板及產出雜湊。此模板的安裝行為（包括標準 /data/openpilot 替換）保留。
