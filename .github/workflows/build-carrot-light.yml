@@ -1,0 +1,60 @@
+name: Build installable Carrot Light
+on:
+  push:
+    branches: [main]
+    paths: ['comma/**', 'esp32/**', 'tests/**', '.github/workflows/build-carrot-light.yml', 'README.md', 'installer.sh']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: carrot-light-release
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: addon
+          persist-credentials: false
+      - name: Test bridge
+        run: python3 -m unittest discover -s addon/tests -v
+      - name: Fetch pinned official source
+        run: |
+          git clone --depth 1 --branch carrot-wip https://github.com/ajouatom/openpilot.git official
+          test "$(git -C official rev-parse HEAD)" = e74e6938ddc4574b1ba19ee7405ff146f3c1728e
+          mkdir release
+          git -C official archive HEAD | tar -x -C release
+      - name: Integrate read-only bridge
+        run: |
+          python3 addon/comma/install.py --root "$PWD/release"
+          rm -f release/openpilot/system/manager/process_config.py.ambient-backup
+          # Avoid enabling the upstream repository's unrelated CI/release jobs.
+          rm -rf release/.github/workflows
+          mkdir -p release/carrot_light
+          cp -R addon/comma addon/esp32 addon/tests release/carrot_light/
+          cp addon/README.md release/carrot_light/README.md
+          printf '%s\n' e74e6938ddc4574b1ba19ee7405ff146f3c1728e > release/carrot_light/UPSTREAM_COMMIT
+          python3 -m compileall -q release/carrot_light release/openpilot/selfdrive/carrot/ambientd.py
+          find release/carrot_light -type d -name __pycache__ -prune -exec rm -rf {} +
+      - name: Publish installable branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_REPO: ${{ github.repository }}
+          ADDON_SHA: ${{ github.sha }}
+        run: |
+          cd release
+          git init -b carrot-wip
+          git config user.name 'Carrot Light Builder'
+          git config user.email 'carrot-light@users.noreply.github.com'
+          git add -A
+          git commit -m "Carrot Light: official e74e6938 plus read-only ambient bridge ($ADDON_SHA)" -m 'Docs-Not-Needed: addon setup is documented under carrot_light; no official vehicle setting or control behavior changed.'
+          git remote add origin "https://github.com/$TARGET_REPO.git"
+          # Lease protects any external edits; stop rather than overwrite an existing release.
+          EXISTING=$(git ls-remote origin refs/heads/carrot-wip | cut -f1)
+          if [ -n "$EXISTING" ]; then
+            echo 'carrot-wip already exists; this bootstrap never overwrites it.'
+            exit 1
+          fi
+          git -c 'credential.helper=!f() { echo username=x-access-token; echo "password=$GH_TOKEN"; }; f' push --force-with-lease=refs/heads/carrot-wip: origin HEAD:refs/heads/carrot-wip
